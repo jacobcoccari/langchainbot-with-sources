@@ -31,7 +31,7 @@ def main():
         persist_directory="./11-Langchain-Bot/langchain_documents_db",
         embedding_function=embedding_function,
     )
-    retriever = db.as_retriever(search_type="mmr",search_kwargs={"k": 10}) 
+    retriever = db.as_retriever(search_type="mmr",search_kwargs={"k": 6}) 
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
