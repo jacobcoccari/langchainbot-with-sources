@@ -22,7 +22,7 @@ def create_prompt(history):
     {context}
 
     ]\n""" + """\nThe following is the history of the conversation so far: \n [""" + 
-    history + "]\n\n Please return your response in markdown. Be concise and comprehensive. \n user: \n<{question}>")
+    history + "]\n\n Please return your response in markdown. Be concise and speak in simple terms. \n user: \n<{question}>")
 
     prompt = ChatPromptTemplate.from_messages(
         [

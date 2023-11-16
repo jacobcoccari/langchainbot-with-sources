@@ -28,10 +28,10 @@ def main():
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     embedding_function = OpenAIEmbeddings()
     db = Chroma(
-        persist_directory="./11-Langchain-Bot/langchain_documents_db",
+        persist_directory="./11-Langchain-Bot/",
         embedding_function=embedding_function,
     )
-    retriever = db.as_retriever(search_type="mmr",search_kwargs={"k": 6}) 
+    retriever = db.as_retriever(search_type="mmr",search_kwargs={"k": 4}) 
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
