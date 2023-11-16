@@ -17,7 +17,10 @@ def generate_assistant_response(user_prompt):
     prompt = (
         """You are a helpful and friendly AI chatbot assistant for Langchain. \n
     Please answer the following user query. You are helping the user learn Langchain,
-    so please speak in simple english. Question:\n"""
+    so please speak in simple english. 
+    
+    Please answer the user query at the bottom of the page 
+    Question:\n"""
         + user_prompt
     )
     db = Chroma(
@@ -26,7 +29,8 @@ def generate_assistant_response(user_prompt):
     )
     retriever = db.as_retriever(k=3)
 
-    print(retriever.get_relevant_documents("what is the retrievalqa chain?"))
+    retrived_docs = retriever.get_relevant_documents(user_prompt)
+    print(retrived_docs)
 
     qa = RetrievalQA.from_chain_type(
         llm=model,
@@ -35,9 +39,11 @@ def generate_assistant_response(user_prompt):
         # memory=memory,
         return_source_documents=True,
     )
-    response = qa(prompt)
+    # response = qa(prompt)
     source_string = format_source_string(response)
-    full_return = response["result"] + source_string
+    full_return = response["result"] 
+    print(response)
+    # + source_string
     return full_return
 
 
