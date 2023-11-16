@@ -1,2 +1,4 @@
 langchain_documents_db
 .env
+venv
+langchain_documents.pkl
