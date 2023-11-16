@@ -1,103 +1,33 @@
-import streamlit as st
 from dotenv import load_dotenv
 from langchain.chat_models import ChatOpenAI
-from langchain.chains import RetrievalQA
-from langchain.memory import ConversationBufferMemory
-from langchain.vectorstores import Chroma
-from langchain.embeddings import OpenAIEmbeddings
-
+from langchain.chat_models import ChatOpenAI
+from langchain.schema.runnable import RunnablePassthrough
 
 load_dotenv()
-model = ChatOpenAI(model='gpt-4-1106-preview')
-memory = ConversationBufferMemory(return_messages=True)
-embedding_function = OpenAIEmbeddings()
 
 
-def generate_assistant_response(user_prompt):
-    prompt = (
-        """You are a helpful and friendly AI chatbot assistant for Langchain. \n
-    Please answer the following user query. You are helping the user learn Langchain,
-    so please speak in simple english. 
-    
-    Please answer the user query at the bottom of the page 
-    Question:\n"""
-        + user_prompt
+
+from utls.compose_prompt import create_prompt
+from utls.format_memory import get_chat_history
+from utls.moderation import harmful_content_check
+# from utls.token_printer import TokenPrinter
+
+
+def format_docs(docs):
+    return "\n\n".join([d.page_content for d in docs])
+
+
+def generate_assistant_response(query, retriever, streamlit_memory):
+    history = get_chat_history(streamlit_memory)
+    prompt = create_prompt(history) 
+    model = ChatOpenAI(model = 'gpt-3.5-turbo-16k')
+    check = harmful_content_check(query)
+    # callback = TokenPrinter()
+    if check is not None:
+        print(check)
+    chain = (
+        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        | prompt
+        | model
     )
-    db = Chroma(
-        persist_directory="/Users/jacob/src/consulting/MyRareData/langchainbot_with_sources/11-Langchain-Bot/langchain_documents_db",
-        embedding_function=embedding_function,
-    )
-    retriever = db.as_retriever(k=3)
-
-    retrived_docs = retriever.get_relevant_documents(user_prompt)
-    print(retrived_docs)
-
-    qa = RetrievalQA.from_chain_type(
-        llm=model,
-        chain_type="stuff",
-        retriever=retriever,
-        # memory=memory,
-        return_source_documents=True,
-    )
-    # response = qa(prompt)
-    source_string = format_source_string(response)
-    full_return = response["result"] 
-    print(response)
-    # + source_string
-    return full_return
-
-
-def format_source_string(response):
-    unique_source_documents = set(
-        [
-            source_document.metadata["source"]
-            for source_document in response["source_documents"]
-        ]
-    )
-    source_string = """\n___\n ### Sources: \n ```python
-    """
-    for source_document in unique_source_documents:
-        source_string = (
-            source_string
-            + source_document
-            + """\n"""
-        )
-    return source_string
-
-
-def save_chat_history(prompt):
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": prompt,
-        }
-    )
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    assistant_response = generate_assistant_response(prompt)
-    with st.chat_message("assistant"):
-        # print(assistant_response)
-        st.markdown(assistant_response)
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": assistant_response,
-        }
-    )
-
-
-def main():
-    st.title("ChatGPT Clone with ConversationChain")
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-    prompt = st.chat_input("What is up?")
-
-    if prompt:
-        save_chat_history(prompt)
-
-
-if __name__ == "__main__":
-    main()
+    return chain.invoke(query).content  
