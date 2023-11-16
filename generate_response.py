@@ -1,42 +1,42 @@
 import streamlit as st
 from dotenv import load_dotenv
 from langchain.chat_models import ChatOpenAI
-from langchain.chains import RetrievalQAWithSourcesChain
+from langchain.chains import RetrievalQA
 from langchain.memory import ConversationBufferMemory
 from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
 
 
 load_dotenv()
-model = ChatOpenAI()
+model = ChatOpenAI(model='gpt-4-1106-preview')
 memory = ConversationBufferMemory(return_messages=True)
 embedding_function = OpenAIEmbeddings()
 
 
-def generate_assistant_response(prompt):
+def generate_assistant_response(user_prompt):
     prompt = (
         """You are a helpful and friendly AI chatbot assistant for Langchain. \n
     Please answer the following user query. You are helping the user learn Langchain,
     so please speak in simple english. Question:\n"""
-        + prompt
+        + user_prompt
     )
     db = Chroma(
-        persist_directory="./11-Langchain-Bot/langchain_documents_db",
+        persist_directory="/Users/jacob/src/consulting/MyRareData/langchainbot_with_sources/11-Langchain-Bot/langchain_documents_db",
         embedding_function=embedding_function,
     )
-    retriever = db.as_retriever(search_type="mmr")
+    retriever = db.as_retriever(k=3)
 
-    qa = RetrievalQAWithSourcesChain.from_chain_type(
+    print(retriever.get_relevant_documents("what is the retrievalqa chain?"))
+
+    qa = RetrievalQA.from_chain_type(
         llm=model,
         chain_type="stuff",
         retriever=retriever,
         # memory=memory,
         return_source_documents=True,
     )
-
     response = qa(prompt)
     source_string = format_source_string(response)
-    print(response)
     full_return = response["result"] + source_string
     return full_return
 
@@ -54,8 +54,7 @@ def format_source_string(response):
         source_string = (
             source_string
             + source_document
-            + """
-            """
+            + """\n"""
         )
     return source_string
 
@@ -71,7 +70,7 @@ def save_chat_history(prompt):
         st.markdown(prompt)
     assistant_response = generate_assistant_response(prompt)
     with st.chat_message("assistant"):
-        print(assistant_response)
+        # print(assistant_response)
         st.markdown(assistant_response)
     st.session_state.messages.append(
         {

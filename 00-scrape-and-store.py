@@ -55,7 +55,7 @@ def clean_html(body):
 
 def load_csv():
     urls = []
-    with open("11-Langchain-Bot/all-langchain-urls.csv", "r") as csv_file:
+    with open("./all-langchain-urls.csv", "r") as csv_file:
         csv_reader = csv.reader(csv_file)
         for row in csv_reader:
             urls.append(row[0])
@@ -69,8 +69,6 @@ def main():
     # Replace .page_content with cleaned page content.
     for i in range(len(docs)):
         docs[i].page_content = clean_html(docs[i].page_content)
-        print("-------")
-        print(docs[i].page_content)
 
     # Write it to Pickl
     pickled_str = pickle.dumps(docs)

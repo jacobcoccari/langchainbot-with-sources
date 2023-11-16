@@ -15,7 +15,7 @@ embedding_function = OpenAIEmbeddings()
 
 def generate_assistant_response(prompt):
     db = Chroma(
-        persist_directory="./11-Langchain-Bot/langchain_documents_db",
+        persist_directory="/Users/jacob/src/consulting/MyRareData/langchainbot_with_sources/langchain_documents.pkl",
         embedding_function=embedding_function,
     )
     retriever = db.as_retriever(search_type="mmr")
