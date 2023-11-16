@@ -1,7 +1,7 @@
 import streamlit as st
 from dotenv import load_dotenv
 from langchain.chat_models import ChatOpenAI
-from langchain.chains import RetrievalQA
+from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.memory import ConversationBufferMemory
 from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
@@ -26,15 +26,17 @@ def generate_assistant_response(prompt):
     )
     retriever = db.as_retriever(search_type="mmr")
 
-    qa = RetrievalQA.from_chain_type(
+    qa = RetrievalQAWithSourcesChain.from_chain_type(
         llm=model,
         chain_type="stuff",
         retriever=retriever,
         # memory=memory,
         return_source_documents=True,
     )
+
     response = qa(prompt)
     source_string = format_source_string(response)
+    print(response)
     full_return = response["result"] + source_string
     return full_return
 
